@@ -13,8 +13,8 @@ def getCoords(df):
 	long *= parseCoord(df["longitude"])
 	return lat,long
 
-def convertFileKML():
-    df = dataReader.read_in_data('data/2023_08_02__183833_gps_file.txt')
+def convertFileKML(file):
+    df = dataReader.read_in_data(file)
 
     linesAdded = 0
     currentLine=0
@@ -31,4 +31,4 @@ def convertFileKML():
 
     kml.save("output.kml")
 if __name__ == "__main__":
-     convertFileKML()
+     convertFileKML('data/2023_08_02__183833_gps_file.txt')
