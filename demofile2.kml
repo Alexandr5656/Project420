@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+  <name>Road Styling</name>
+  <Style id="street_sidewalk">
+    <LineStyle>
+      <color>ff235523</color>
+      <gx:physicalWidth>10</gx:physicalWidth>
+      <gx:outerColor>ff55ff55</gx:outerColor>
+      <gx:outerWidth>0.25</gx:outerWidth>
+    </LineStyle>
+  </Style>
+  <Style id="highway">
+    <LineStyle>
+      <color>cc1447ff</color>
+      <gx:physicalWidth>20</gx:physicalWidth>
+      <gx:outerColor>cc1473ff</gx:outerColor>
+      <gx:outerWidth>0.75</gx:outerWidth>
+    </LineStyle>
+  </Style>
+  <Placemark>
+    <styleUrl>#street_sidewalk</styleUrl>
+    <LineString>
+      <coordinates>
+     -122.2442883478408,37.4347536724074,0
+     -122.2417741446485,37.43594997501623,0
+     -122.2414951359056,37.43611878445952,0
+      </coordinates>
+    </LineString>
+  </Placemark>
+  <Placemark>
+    <styleUrl>#highway</styleUrl>
+    <LineString>
+    <gx:drawOrder>1</gx:drawOrder>
+    <coordinates>
+      -122.2442692500139,37.43634904345254,0
+      -122.2415928723012,37.43416417520744,0
+    </coordinates>
+    </LineString>
+  </Placemark>
+</Document>
+</kml>

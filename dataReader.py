@@ -41,6 +41,7 @@ def read_in_data(filename):
         'longitude': longitude,
         'longitude_dir': longitude_direction,
         'altitude': altitude,
+        'isUpHill' : False
         # 'speed': speeds
     }
     
@@ -48,6 +49,6 @@ def read_in_data(filename):
         
 
 
-if __name__ == "__main__":
-    df = read_in_data('data/2023_09_28__164353_gps_file.txt')
-    print(df.head())
+#if __name__ == "__main__":
+#    df = read_in_data('data/2023_09_28__164353_gps_file.txt')
+#    print(df.head())
