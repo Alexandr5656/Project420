@@ -1,5 +1,5 @@
 import simplekml
-from dataReader import read_in_data
+from dataReader import read_in_data_pynmea, dataCleaner
 
 
 kmlTop = '<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"\n xmlns:gx="http://www.google.com/kml/ext/2.2">   <!-- required when using gx-prefixed elements -->\n\n<Placemark>\n  <name>gx:altitudeMode Example</name>\n  <LookAt>\n    <longitude>146.806</longitude>\n    <latitude>12.219</latitude>\n    <heading>-60</heading>\n    <tilt>70</tilt>\n    <range>6300</range>\n    <gx:altitudeMode>relativeToSeaFloor</gx:altitudeMode>\n  </LookAt>\n  <LineString>\n    <extrude>1</extrude>\n    <gx:altitudeMode>relativeToSeaFloor</gx:altitudeMode>\n    <coordinates>'
@@ -11,10 +11,10 @@ def parseCoord(data):
     return degrees + minutes / 60
 
 def getCoords(df):
-	lat = 1 if df["latitude_dir"] == "N" else -1
-	long = 1 if df["longitude_dir"] == "E" else -1
-	lat *= parseCoord(df["latitude"])
-	long *= parseCoord(df["longitude"])
+	lat = 1 if df["lat_dir"] == "N" else -1
+	long = 1 if df["lon_dir"] == "E" else -1
+	lat *= parseCoord(df["lat"])
+	long *= parseCoord(df["lon"])
 	return lat,long
 
 def convertFileKML(df):
@@ -44,5 +44,6 @@ def convertFileKML(df):
     f.close()
         #kml.save("output.kml")
 if __name__ == "__main__":
-     df = read_in_data('data/2023_08_01__233842_gps_file.txt')
+     df = read_in_data_pynmea('data/2023_08_01__233842_gps_file.txt')
+    #  df = dataCleaner(df)
      convertFileKML(df)
