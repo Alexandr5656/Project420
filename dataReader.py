@@ -32,7 +32,7 @@ def read_in_data(filename):
     altitude = [row[9] for row in GPGGA_lines]
     
     # print(len(speeds))
-    print(len(UTC))
+    # print(len(UTC))
     
     data = {
         'UTC': UTC,
@@ -45,6 +45,9 @@ def read_in_data(filename):
     }
     
     return pd.DataFrame(data=data)
+
+def dataCleaner(dataframe: pd.DataFrame):
+    pass
         
 
 
