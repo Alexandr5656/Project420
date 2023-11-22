@@ -23,21 +23,16 @@ def findHills(df):
 	currentlyUp = False
 	start = None
 	prev_alt = None
-	for i, row in df.iterrows():
-		if(i == 0):
-			prev_alt = row['smoothedAltitude']
-			continue  
-		altitude_change = row['smoothedAltitude'] - prev_alt
+	for i in range(1, len(df)):
+		altitude_change = df['smoothedAltitude'][i] - df['smoothedAltitude'][i-1]
 		if altitude_change > threshold:
 			if not currentlyUp:
 				start = i - 1
 				currentlyUp = True
-				uphill_segment = [] # reset uphill segment
-			uphill_segment.append(row)
 		else:
 			if currentlyUp:
 				if (i - 1) - start >= minHill:
-					segments.append(uphill_segment)
+					segments.append((start, i - 1))
 				currentlyUp = False
 	#print(segments)
 	return segments

@@ -125,6 +125,7 @@ def dataCleaner(dataframe: pd.DataFrame):
     diff_between_points.sort(reverse=True)
     # print('data length '+ str(len(dataframe)))
     dataframe = dataframe.drop(index=rows_to_drop)
+    dataframe.reset_index(drop=True, inplace=True)
     # print('cleaned data length '+str(len(dataframe)))
     # speed_arr.sort()
     # plt.hist(speed_arr, bins=20)
