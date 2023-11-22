@@ -1,60 +1,43 @@
 import pandas
-import dataReader
+import dataReader					
+import numpy as np
+
 
 def findHills(df):
-	threshold = .05
-	HILLMIN = 50
-	FLATMAX = 30
-	uphillBattle = []
-	i = 0
-	while i < len(df):
-		print(i)
-		if i%20 >0:
-			i+=1
-			continue
-		currentHill = []
-		flatCount = 0
-		for j in range(i+1,len(df)-1):
-			lowerPoint = float(df.loc[i,'altitude'])
-			higherPoint = float(df.loc[j,'altitude'])
-			adjustedThreshold = threshold*len(currentHill)
-			#print(higherPoint-lowerPoint)
-			if (higherPoint-lowerPoint > adjustedThreshold):
-				currentHill.append(higherPoint)
-				flatCount=0
-				#print(f"{i}   |||   Yes")
-				continue
-			if (higherPoint-lowerPoint < adjustedThreshold and flatCount < FLATMAX):
-				flatCount+= 1
-				continue
-			if (higherPoint-lowerPoint < adjustedThreshold and flatCount == FLATMAX):
-				if len(currentHill) > HILLMIN:
-					i = j+1
-					print("Hill FOund")
-					uphillBattle.append(currentHill)
-					break
-		i+=1
-	return uphillBattle
-					
+	flatCount = 5
+	threshold = 0.25
+	minHill = 5
+
+	df['altitude'] = df['altitude'].astype(float) # Added this hear for loop to go faster
+
+	smoothedAltitudes = []
+	for i in range(len(df)):
+		start = max(0, i - flatCount + 1)
+		fixedAlt = sum(df['altitude'][start:i+1]) / (i - start + 1)
+		smoothedAltitudes.append(fixedAlt)
+	df['smoothedAltitude'] = smoothedAltitudes
 
 
-			
-
-
-
-
-
-
-def labelHills(df):
-	hillList = findHills(df)
-	print(f"Hills: {len(hillList)}")
-	for hill in hillList:
-		for entry in hill:
-			print("Found Hill")
-			df[entry]["isUpHill"] = True
-	return df
-
-
-
-#if __name__ == "__main__":
-#	main()
+	segments= []
+	uphill_segment = [] # list of rows from dataframe
+	currentlyUp = False
+	start = None
+	prev_alt = None
+	for i, row in df.iterrows():
+		if(i == 0):
+			prev_alt = row['smoothedAltitude']
+			continue  
+		altitude_change = row['smoothedAltitude'] - prev_alt
+		if altitude_change > threshold:
+			if not currentlyUp:
+				start = i - 1
+				currentlyUp = True
+				uphill_segment = [] # reset uphill segment
+			uphill_segment.append(row)
+		else:
+			if currentlyUp:
+				if (i - 1) - start >= minHill:
+					segments.append(uphill_segment)
+				currentlyUp = False
+	#print(segments)
+	return segments

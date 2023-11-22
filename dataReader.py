@@ -5,51 +5,51 @@ import pynmea2
 from geopy.distance import distance
 import numpy as np
 
-def read_in_data(filename):
-    GPGGA_lines = [] # has altitude
-    GPRMC_lines = [] # has speed
-    file = open(filename, "r")
-    lines = file.readlines()
-    for index, line in enumerate(lines):
-        # skip initial file lines
-        if(line[0] != "$"):
-            continue
-        split_data = line.strip('\n').split(',') # split by comma delimiter, and take out new line
-        if(index >= 6):
-            if(float(split_data[1]) - float(lines[index-1].split(',')[1]) != 0.250):
-                continue
-        if(split_data[0] == "$GPGGA"):
-            GPGGA_lines.append(split_data)
-        elif(split_data[0] == "$GPRMC"):
-            # if invalid as denoted by 'V' then skip
-            if(split_data[3] ==  'V'):
-                continue_again = True
-                continue
-            GPRMC_lines.append(split_data)
+# def read_in_data(filename):
+#     GPGGA_lines = [] # has altitude
+#     GPRMC_lines = [] # has speed
+#     file = open(filename, "r")
+#     lines = file.readlines()
+#     for index, line in enumerate(lines):
+#         # skip initial file lines
+#         if(line[0] != "$"):
+#             continue
+#         split_data = line.strip('\n').split(',') # split by comma delimiter, and take out new line
+#         if(index >= 6):
+#             if(float(split_data[1]) - float(lines[index-1].split(',')[1]) != 0.250):
+#                 continue
+#         if(split_data[0] == "$GPGGA"):
+#             GPGGA_lines.append(split_data)
+#         elif(split_data[0] == "$GPRMC"):
+#             # if invalid as denoted by 'V' then skip
+#             if(split_data[3] ==  'V'):
+#                 continue_again = True
+#                 continue
+#             GPRMC_lines.append(split_data)
             
-    # speeds = [row[7] for row in GPRMC_lines] # get only the speed column from GPRMC line
-    UTC = [row[1] for row in GPGGA_lines]
-    latitude = [row[2] for row in GPGGA_lines]
-    latitude_direction = [row[3] for row in GPGGA_lines]
-    longitude = [row[4] for row in GPGGA_lines]
-    longitude_direction = [row[5] for row in GPGGA_lines]
-    altitude = [row[9] for row in GPGGA_lines]
+#     # speeds = [row[7] for row in GPRMC_lines] # get only the speed column from GPRMC line
+#     UTC = [row[1] for row in GPGGA_lines]
+#     latitude = [row[2] for row in GPGGA_lines]
+#     latitude_direction = [row[3] for row in GPGGA_lines]
+#     longitude = [row[4] for row in GPGGA_lines]
+#     longitude_direction = [row[5] for row in GPGGA_lines]
+#     altitude = [row[9] for row in GPGGA_lines]
     
-    # print(len(speeds))
-    # print(len(UTC))
+#     # print(len(speeds))
+#     # print(len(UTC))
     
-    data = {
-        'UTC': UTC,
-        'latitude': latitude,
-        'latitude_dir': latitude_direction,
-        'longitude': longitude,
-        'longitude_dir': longitude_direction,
-        'altitude': altitude,
-        'isUpHill' : False
-        # 'speed': speeds
-    }
+#     data = {
+#         'UTC': UTC,
+#         'latitude': latitude,
+#         'latitude_dir': latitude_direction,
+#         'longitude': longitude,
+#         'longitude_dir': longitude_direction,
+#         'altitude': altitude,
+#         'isUpHill' : False
+#         # 'speed': speeds
+#     }
     
-    return pd.DataFrame(data=data)
+#     return pd.DataFrame(data=data)
 
 
 # method being used, uses pynmea
@@ -123,9 +123,9 @@ def dataCleaner(dataframe: pd.DataFrame):
             prev = row
 
     diff_between_points.sort(reverse=True)
-    print('data length '+ str(len(dataframe)))
+    # print('data length '+ str(len(dataframe)))
     dataframe = dataframe.drop(index=rows_to_drop)
-    print('cleaned data length '+str(len(dataframe)))
+    # print('cleaned data length '+str(len(dataframe)))
     # speed_arr.sort()
     # plt.hist(speed_arr, bins=20)
     # plt.show()
@@ -143,7 +143,13 @@ def convert_to_datetime(time_string):
 
 # distance is meters, time is microseconds
 def get_speed(distance, time):
-    return (distance/time)*1000000 # convert to m/s
+    if time == 0:
+        return 0
+    try:
+        speed = (distance/time)*1000000 # convert to m/s
+        return speed
+    except RuntimeError as  e:
+        return 0
 
 # if __name__ == "__main__":
 # #    df = read_in_data('data/2023_09_28__164353_gps_file.txt')
