@@ -39,11 +39,11 @@ def convertFileKML(df):
             # multipnt.newpoint(coords=[(long, lat)])
     #print(coordString)
     total = kmlTop + coordString + kmlBot
-    f = open("demofile3.kml", "w")
+    f = open("demofile4.kml", "w")
     f.write(total)
     f.close()
         #kml.save("output.kml")
 if __name__ == "__main__":
-     df = read_in_data_pynmea('data/2023_08_01__233842_gps_file.txt')
+     df = read_in_data_pynmea('data/2023_09_05__202652_gps_file.txt')
      df = dataCleaner(df)
      convertFileKML(df)
