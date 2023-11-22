@@ -14,60 +14,61 @@ def parseCoord(data):
 			data = str(data)
 		parts = data.split('.')
 	except:
-		print(f"Cry: {data}")
+		print(f"Error : {data}")
 	degrees = int(parts[0]) // 100
 	minutes = float(parts[0][-2:] + '.' + parts[1])
 	return degrees + minutes / 60
 
-def getCoords(df):
+def getCoords(df,alt):
 	lat = 1 if df["lat_dir"] == "N" else -1
 	long = 1 if df["lon_dir"] == "E" else -1
 	lat *= parseCoord(df["lat"])
 	long *= parseCoord(df["lon"])
-	return lat,long
+	return lat,long,alt
 
 
-def extractAllCoords(df, indices):
+def extractAllCoords(df, indices,alt = 0):
 	coords = []
 	for i in indices:
 		try:
-			lat, long = getCoords(df.loc[i])
+			lat, long, alt = getCoords(df.loc[i],alt)
 		except:
 			continue
-		coords.append((long, lat))
+		coords.append((long, lat,alt))
 	return coords
 
-def convertToKML(df, hills,fileName):
-	kml = simplekml.Kml()
-
+def convertToKML(df, hills, kml):
 	uphillStyle = simplekml.Style()
 	uphillStyle.linestyle.color = simplekml.Color.red
-	uphillStyle.linestyle.width = 4
+	uphillStyle.linestyle.width = 5
+
 	downhillStyle = simplekml.Style()
 	downhillStyle.linestyle.color = simplekml.Color.green
-	downhillStyle.linestyle.width = 4
+	downhillStyle.linestyle.width = 2
 
+	uAlt = 100
+	dAlt = 50
 
 	for hill in hills:
-		segment_coords = extractAllCoords(df, range(hill[0], hill[1] + 1))
-		ls = kml.newlinestring(coords=segment_coords)
+		segCoords = extractAllCoords(df, range(hill[0], hill[1] + 1), alt=uAlt)
+		ls = kml.newlinestring(coords=segCoords)
+		ls.altitudemode = simplekml.AltitudeMode.relativetoground
+		ls.extrude = 1
 		ls.style = uphillStyle
 
 	last = 0
 	for hill in hills:
 		start, end = hill
 		if start > last:
-			segment_coords = extractAllCoords(df, range(last, start))
-			ls = kml.newlinestring(coords=segment_coords)
+			segCoords = extractAllCoords(df, range(last, start), alt=dAlt)
+			ls = kml.newlinestring(coords=segCoords)
 			ls.style = downhillStyle
 		last = end + 1
 
 	if last < len(df):
-		segment_coords = extractAllCoords(df, range(last, len(df)))
-		ls = kml.newlinestring(coords=segment_coords)
+		segCoords = extractAllCoords(df, range(last, len(df)), alt=dAlt)
+		ls = kml.newlinestring(coords=segCoords)
 		ls.style = downhillStyle
-
-	kml.save("outputs/"+fileName.strip(".txt")+".kml")
 
 
 
