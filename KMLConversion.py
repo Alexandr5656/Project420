@@ -36,14 +36,14 @@ def convertFileKML(df):
             linesAdded += 1
             lat, long = getCoords(row)
             coordString += f"{long},{lat},50\n"
-            #multipnt.newpoint(coords=[(long, lat)])
+            # multipnt.newpoint(coords=[(long, lat)])
     #print(coordString)
     total = kmlTop + coordString + kmlBot
-    f = open("demofile2.kml", "w")
+    f = open("demofile3.kml", "w")
     f.write(total)
     f.close()
         #kml.save("output.kml")
 if __name__ == "__main__":
      df = read_in_data_pynmea('data/2023_08_01__233842_gps_file.txt')
-    #  df = dataCleaner(df)
+     df = dataCleaner(df)
      convertFileKML(df)

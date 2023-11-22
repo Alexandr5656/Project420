@@ -1,6 +1,9 @@
+from datetime import datetime
 from matplotlib import pyplot as plt
 import pandas as pd
 import pynmea2
+from geopy.distance import distance
+import numpy as np
 
 def read_in_data(filename):
     GPGGA_lines = [] # has altitude
@@ -11,7 +14,6 @@ def read_in_data(filename):
         # skip initial file lines
         if(line[0] != "$"):
             continue
-        # TODO remove if invalid V (might not have to worry about)
         split_data = line.strip('\n').split(',') # split by comma delimiter, and take out new line
         if(index >= 6):
             if(float(split_data[1]) - float(lines[index-1].split(',')[1]) != 0.250):
@@ -49,55 +51,102 @@ def read_in_data(filename):
     
     return pd.DataFrame(data=data)
 
+
+# method being used, uses pynmea
 def read_in_data_pynmea(filename):
     GPS_lines = []
     file = open(filename, "r")
-    lines = file.readlines()
+    lines = file.readlines() # get file lines
+    # loop through lines
     for line in lines:
         # skip initial file lines
         if(line[0] != "$"):
             continue
         try:
-            msg = pynmea2.parse(line)
-            # only need GGA because we don't need speed necessarily from RMC
-            if(msg.sentence_type == "GGA"):
-                GPS_lines.append(msg) # only append the array of data
+            # only care about GPGGA data
+            if line.startswith("$GPGGA"):
+                msg = pynmea2.parse(line)
+                # convert timestamp to string
+                msg.timestamp = msg.timestamp.strftime("%H:%M:%S:%f")
+                # only need GGA because we don't need speed necessarily from RMC
+                if(msg.sentence_type == "GGA"):
+                    GPS_lines.append(msg) # only append the array of data
         # if error ignore and continue
         except pynmea2.ParseError as e:
             continue
-    # get column names
+    # get column names for dataframe
     column_names = []
     for field in GPS_lines[0].fields:
         column_names.append(field[1])
     # make dataframe with only grabbing data array from GPS_lines, with the column_names
     return pd.DataFrame(data=[row.data for row in GPS_lines], columns=column_names)
 
+# clean the data
 def dataCleaner(dataframe: pd.DataFrame):
-    # remove multiple data points same location
-    rows_to_drop = []
-    diff_between_points = []
+    
+    rows_to_drop = set() # stores the rows we will delete from dataframe
+    diff_between_points = [] # for testing 
+    speed_arr = [] # for testing
+    # loop through all rows in dataframe
     for index, row in dataframe.iterrows():
         if index == 0:
             prev = row
             continue
         else:
-            diff = abs(float(prev['lat']) - float(row['lat']))
-            diff_between_points.append(diff)
-            if(diff >= 2.5):
-                rows_to_drop.append(index)
-            if(prev['lat'] == row['lat'] and prev['lon'] == row['lon']):
-                rows_to_drop.append(index)
+            # delete if data is not quality of 1 or 2
+            if(row.gps_qual != '1' and row.gps_qual != '2' ):
+                rows_to_drop.add(index)
+                continue
+            
+            # convert latitude and longitude to degree format
+            lat_row = pynmea2.dm_to_sd(row['lat'])
+            lat_prev = pynmea2.dm_to_sd(prev['lat'])
+            lon_row = pynmea2.dm_to_sd(row['lon'])
+            lon_prev = pynmea2.dm_to_sd(prev['lon'])
+            
+            # get distance
+            distance_2d, distance_3d = get_distance(lat_row, lat_prev, lon_row, lon_prev, float(row.altitude), float(prev.altitude))
+            # get time diff
+            time_diff = convert_to_datetime(row.timestamp) - convert_to_datetime(prev.timestamp)
+            # get speed
+            speed = get_speed(distance_3d, time_diff.microseconds)
+            
+            # if speed < 0.5 m/s delete
+            if speed < .5:
+                rows_to_drop.add(index)
+            
+            # remove some stopping data points where not moving, removed so not as precise
+            # if(distance_2d < 0.1):
+            #     rows_to_drop.add(index)
+            
+            # set previous
+            prev = row
+
     diff_between_points.sort(reverse=True)
-    
+    print('data length '+ str(len(dataframe)))
     dataframe = dataframe.drop(index=rows_to_drop)
-    # plt.hist(diff_between_points)
+    print('cleaned data length '+str(len(dataframe)))
+    # speed_arr.sort()
+    # plt.hist(speed_arr, bins=20)
     # plt.show()
     return dataframe
-        
 
+# get distance, 2D and 3D
+def get_distance(lat_row, lat_prev, lon_row, lon_prev, alt_row, alt_prev):
+    distance_2d = distance((lat_row, lon_row), (lat_prev, lon_prev)).m
+    distance_3d = np.sqrt(distance_2d**2 +(alt_row-alt_prev)**2)
+    return (distance_2d, distance_3d)
 
-if __name__ == "__main__":
-#    df = read_in_data('data/2023_09_28__164353_gps_file.txt')
-   df = read_in_data_pynmea('data/2023_09_28__164353_gps_file.txt')
-   dataCleaner(df)
+# convert date string from pynmea to datetime object
+def convert_to_datetime(time_string):
+    return datetime.strptime(time_string, "%H:%M:%S:%f")
+
+# distance is meters, time is microseconds
+def get_speed(distance, time):
+    return (distance/time)*1000000 # convert to m/s
+
+# if __name__ == "__main__":
+# #    df = read_in_data('data/2023_09_28__164353_gps_file.txt')
+#    df = read_in_data_pynmea('Test-Suites/8_14_1000_lines.txt')
+#    dataCleaner(df)
 #    print(df.head())
