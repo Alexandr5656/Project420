@@ -10,9 +10,11 @@ kmlBot = '\n    </coordinates>\n  </LineString>\n</Placemark>\n</kml>'
 def parseCoord(data):
 	parts = []
 	try:
+		if type(data)!= str:
+			data = str(data)
 		parts = data.split('.')
 	except:
-		print(data)
+		print(f"Cry: {data}")
 	degrees = int(parts[0]) // 100
 	minutes = float(parts[0][-2:] + '.' + parts[1])
 	return degrees + minutes / 60
@@ -28,7 +30,10 @@ def getCoords(df):
 def extractAllCoords(df, indices):
 	coords = []
 	for i in indices:
-		lat, long = getCoords(df.loc[i])
+		try:
+			lat, long = getCoords(df.loc[i])
+		except:
+			continue
 		coords.append((long, lat))
 	return coords
 
