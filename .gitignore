@@ -1,2 +1,4 @@
 __pycache__/dataReader.cpython-311.pyc
 output.kml
+outputs
+__pycache__/*
